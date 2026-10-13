@@ -1,4 +1,6 @@
-# Ambirefer3d
+# AmbiRefer3D: 3D Visual Grounding with Referential Ambiguity [ICML2026]
+
+[[paper]](https://openreview.net/pdf?id=tkOMvqB6E9)
 
 ## Environment
 
