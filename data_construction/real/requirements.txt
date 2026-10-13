@@ -1,0 +1,8 @@
+openai
+numpy
+Pillow
+tqdm
+open3d
+torch
+torchvision
+# Install PyTorch3D separately for object rendering.

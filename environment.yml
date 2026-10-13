@@ -1,0 +1,30 @@
+name: ambirefer3d
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pytorch=2.1
+  - torchvision=0.16
+  - pytorch-cuda=11.8
+  - numpy=1.26
+  - scipy
+  - pandas
+  - h5py
+  - openblas
+  - pip
+  - pip:
+      - lightning==2.0.6
+      - hydra-core==1.3.2
+      - wandb==0.15.8
+      - open3d
+      - tqdm
+      - pillow
+      - matplotlib
+      - seaborn
+      - scikit-learn
+      - transformers
+      - openai
+      - git+https://github.com/openai/CLIP.git
+

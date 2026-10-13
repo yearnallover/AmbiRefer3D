@@ -1,0 +1,6 @@
+blenderproc
+openai
+numpy
+Pillow
+tqdm
+# bpy and mathutils are supplied by Blender; use blenderproc run.

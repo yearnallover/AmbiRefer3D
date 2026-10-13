@@ -1,0 +1,51 @@
+{
+  "source_audit": {
+    "passed": true,
+    "exit_code": 0
+  },
+  "contract_tests": {
+    "passed": true,
+    "exit_code": 0
+  },
+  "stage2_train_cli": {
+    "passed": true,
+    "exit_code": 0
+  },
+  "stage2_one_epoch_cpu": {
+    "passed": true,
+    "exit_code": 0
+  },
+  "stage2_strict_checkpoint_eval": {
+    "passed": true,
+    "exit_code": 0
+  },
+  "metric_denominators": {
+    "passed": true,
+    "num": 2,
+    "conditional_num": 1,
+    "initial_target_survival": 0.5
+  },
+  "stage1_hydra_configuration": {
+    "passed": true,
+    "exit_code": 0
+  },
+  "stage1_full_gpu_training": {
+    "executed": false,
+    "reason": "Source packaging only; real scenes and checkpoints are external"
+  },
+  "data_construction_regeneration": {
+    "executed": false,
+    "reason": "Requires licensed assets, upstream graphs/renders and configured LLM/VLM services"
+  },
+  "passed": true,
+  "package_metadata": {
+    "passed": true,
+    "distribution_name": "ambirefer3d"
+  },
+  "git_ignore_source_tracking": {
+    "passed": true
+  },
+  "stage2_feature_cli": {
+    "passed": true
+  }
+}

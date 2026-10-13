@@ -1,0 +1,316 @@
+# Managed by Hydra
+
+model_name:
+  _target_: m3drefclip.model.m3dref_clip.M3DRefCLIP
+
+# Table-1 controls can freeze every module except Stage2 while still using the
+# pretrained Stage1 outputs in the live end-to-end batch builder.
+freeze_stage1: False
+
+# Formal proposal/detector recovery only. Enabling this freezes every
+# non-detector parameter and requires all language/trajectory losses off.
+detector_only_recovery:
+  enabled: False
+
+# All Stage1 providers are normalized to the same proposal/score/feature
+# contract before trajectory learning and Stage2 consume them.
+stage1_backbone:
+  name: m3drefclip
+  checkpoint: null
+  span_checkpoint: null
+  detector_root: null
+  bert_root: null
+  roberta_root: null
+  scene_root: ${project_root_path}/dataset/scannetv2
+  freeze_point_backbone: False
+  # External backbones may not expose their native detector losses in this
+  # framework. Freeze the full pretrained proposal network in that case while
+  # keeping framework projections, trajectory adapter, and Stage2 trainable.
+  freeze_native_backbone: False
+  freeze_point_features: True
+  freeze_sparse_backbone: False
+  voxel_size: 0.01
+  nms_iou_threshold: 0.5
+  cache_scenes: 8
+
+network:
+  max_num_proposals: 80
+  use_contrastive_loss: True
+  clip_model: ViT-B/32
+  use_2d_feature: True
+  use_3d_features: True
+
+  detector:
+    output_channel: 32
+    use_gt_proposal: False
+
+  object_renderer:
+    eye: [[0.86, 0.5, 1], [-0.86, 0.5, 1], [0, -1, 1]]
+    rasterizer_setting:
+      image_size: 224
+      radius: 0.025
+      points_per_pixel: 3
+      bin_size: 0
+
+  clip_word_encoder:
+    _target_: m3drefclip.model.language_module.clip_word_encoder.CLIPWordEncoder
+    output_channel: 128
+    dropout: 0.1
+
+  clip_img_encoder:
+    output_channel: 128
+    dropout: 0.1
+
+  matching_module:
+    feat_channel: 128
+    head: 4
+    depth: 2
+
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 0.0005
+  weight_decay: 0.00001
+
+# Optional discriminative learning rates for end-to-end trajectory post-training.
+# They are disabled for the original Stage1 training presets.
+optimizer_groups:
+  enabled: False
+  freeze_stage1_batch_norm: False
+  detector_backbone_lr: 0.00001
+  detector_heads_lr: 0.00002
+  grounding_lr: 0.00005
+  trajectory_adapter_lr: 0.0001
+
+lr_decay:
+  start_epoch: 30
+
+loss:
+  detector_weight: 1.0
+  reference_weight: 1.0
+  contrastive_weight: 1.0
+
+  reference_bce_loss:
+    _target_: m3drefclip.loss.reference_loss.RefBCELoss
+    iou_threshold: 0.5
+    matching_strategy: hungarian
+
+  reference_ce_loss:
+    _target_: m3drefclip.loss.reference_loss.RefCELoss
+    iou_threshold: 0
+
+  contrastive_loss:
+    _target_: m3drefclip.loss.contrastive_loss.MultiPositiveContrastiveLoss
+    temperature: 2.6593
+    direction: bidirectional
+    split_batch: False
+    use_all_batch_negatives: True
+
+  preference_loss:
+    enabled: False
+    weight: 1.0
+    _target_: m3drefclip.loss.trajectory_loss.PreferenceRankingLoss
+    margin: 0.2
+    temperature: 1.0
+    hard_negative_topk: 16
+
+  metric_loss:
+    enabled: False
+    weight: 1.0
+    _target_: m3drefclip.loss.trajectory_loss.MetricDrivenLoss
+    rank_temperature: 0.2
+    f1_weight: 1.0
+    rank_weight: 1.0
+
+  # Requires data.counterfactual_pair_packing.enabled=true and targeted bundle metadata.
+  counterfactual_pair_loss:
+    enabled: False
+    weight: 1.0
+    _target_: m3drefclip.loss.counterfactual_pair_loss.CounterfactualPairPreferenceLoss
+    margin: 0.2
+    strict_pair_presence: True
+
+online_trajectory:
+  enabled: False
+  # ``independent_pairs`` resets candidate survival, belief, and recurrent
+  # memory before every observation. It is the non-trajectory data control.
+  sequence_mode: ordered
+  candidate_threshold: ${model.inference.output_threshold}
+  temperature: 0.5
+  target_iou_threshold: 0.5
+  candidate_iou_threshold: 0.5
+  weight: 1.0
+  loss:
+    _target_: m3drefclip.loss.online_trajectory_loss.OnlineTrajectoryLoss
+    survival_weight: 1.0
+    prune_weight: 0.5
+    ranking_weight: 1.0
+    ranking_margin: 0.2
+    coverage_weight: 0.0
+    candidate_set_weight: 0.0
+    raw_candidate_set_weight: 0.0
+    initial_survival_weight: 0.0
+    coverage_positive_weight: 1.0
+    coverage_negative_weight: 1.0
+    candidate_set_positive_weight: 1.0
+    candidate_set_negative_weight: 1.0
+    transition_weight: 0.0
+    rank_improvement_weight: 0.0
+    # Opt in for new runs; keep legacy training/evaluation reproducible.
+    detach_temporal_baseline: False
+    dpo_weight: 0.0
+    kl_weight: 0.0
+    kl_detach_raw: True
+    kl_initial_only: True
+    dpo_beta: 0.1
+    decision_threshold: ${model.inference.output_threshold}
+    independent_rounds: False
+
+trajectory_adapter:
+  enabled: False
+  apply_to_stage1_output: False
+  include_cross_modal_stage2_features: False
+  proposal_dim: ${model.network.detector.output_channel}
+  query_dim: ${model.network.clip_word_encoder.output_channel}
+  hidden_dim: 128
+  relation_dim: 64
+  dropout: 0.1
+  initial_residual_scale: 0.02
+  max_residual_scale: 0.1
+  max_logit_residual: 2.0
+  max_feature_residual: 2.0
+  initial_prune_gate: 0.05
+  risk_gate_enabled: True
+
+stage2:
+  enabled: False
+  # Pair modes keep ordered metadata for evaluation but flatten trajectories
+  # during training; ``shuffled_pairs`` also permutes their round order.
+  supervision_mode: ordered
+  independent_pair_seed: ${train_seed}
+  reset_decision_heads_on_init: False
+  root_path: ${project_root_path}/stage2_refactor
+  round_json_path: null
+  img_cache_dir: null
+  bbox_source: passthrough
+  scene_data_root: ${project_root_path}/dataset/scannetv2
+  scene_split: auto
+  spec_path: null
+  pretrained_path: null
+  batch_size: 64
+  num_workers: 0
+  max_len: 16
+  imgfeat_dim: 768
+  use_imgfeat: True
+  use_bbox_geom: False
+  use_relative_geom: False
+  use_semantic_label: False
+  num_semantic_classes: 256
+  rel2id:
+    near: 0
+    behind: 1
+    in_front_of: 2
+    left_of: 3
+    right_of: 4
+    next_to: 5
+    above: 6
+    below: 7
+    between: 8
+    closest: 9
+    farthest: 10
+    opposite: 11
+    along: 12
+    inside: 13
+    contains: 14
+  attr2id:
+    color: 0
+    material: 1
+    shape: 2
+    size: 3
+    height: 4
+    other: 5
+    state: 6
+    position: 7
+  use_stage1_features: False
+  stage1_feat_dim: 128
+  use_stage1_quality: False
+  use_scene_context_attention: False
+  use_constraint_conditioned_context: False
+  selector_pre_action_state: False
+  stage1_cache_dir: null
+  stage1_feature_key: features_3d
+  use_stage1_cache_bboxes: False
+  require_stage1_cache: False
+  drop_last: False
+  lr: 0.0003
+  weight_decay: 0.01
+  use_separate_lr: True
+  seed: ${train_seed}
+  use_selector_loss: True
+  use_mask_loss: True
+  use_stop_loss: True
+  use_preference_loss: False
+  use_metric_loss: False
+  use_counterfactual_trajectory_loss: False
+  use_trajectory_dpo_loss: False
+  trajectory_dpo_use_reference: False
+  trajectory_require_explicit_negatives: False
+  trajectory_require_distinct_rounds: False
+  trajectory_batch_size: 16
+  w_selector: 1.0
+  w_mask: 1.0
+  mask_ce_weight: 0.5
+  mask_bce_weight: 1.0
+  mask_positive_weight: 2.0
+  mask_negative_weight: 0.25
+  mask_decision_threshold: ${model.stage2.validation_thr}
+  w_stop: 0.2
+  w_preference: 1.0
+  w_metric: 1.0
+  w_counterfactual: 1.0
+  w_trajectory_dpo: 1.0
+  preference_margin: 0.2
+  preference_temperature: 1.0
+  preference_hard_negative_topk: 16
+  metric_rank_temperature: 0.2
+  metric_f1_weight: 1.0
+  metric_rank_weight: 1.0
+  counterfactual_margin: 0.2
+  trajectory_dpo_beta: 0.1
+  trajectory_grounding_logprob_weight: 1.0
+  trajectory_action_min_utility_gap: 0.01
+  selector_return_discount: 0.9
+  selector_step_cost: 0.1
+  selector_information_gain_weight: 0.25
+  selector_utility_temperature: 0.1
+  use_semantic_constraint_scoring: True
+  validation_enabled: False
+  validation_max_round: 8
+  validation_thr: 0.4
+  validation_stop_thr: 0.5
+  validation_eval_mode: agent
+  validation_v_target_strategy: top1
+  validation_selector_strategy: ours
+  validation_risk_sensitive_pruning: True
+  validation_min_keep_ratio: 0.5
+  validation_min_keep_count: 1
+  validation_joint_ts_weight: 0.5
+  validation_joint_f1_weight: 0.25
+  validation_joint_acc_weight: 0.25
+  end_to_end:
+    enabled: False
+    weight: 1.0
+    stage1_gradient_scale: 1.0
+    feature_key: aabb_features_3d
+    require_aligned_batch: True
+    use_hard_alive_mask: False
+    teacher_force_candidate_state: True
+    candidate_state_mode: auto
+    preserve_scene_context: False
+    use_initial_stage1_state: False
+    autoregressive_state_training: False
+    autoregressive_teacher_mix: 0.5
+
+inference:
+  output_threshold: 0.01
+  force_multi_object_decode: False
+  export_multi3drefer_style: False
