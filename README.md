@@ -1,24 +1,4 @@
-# ambirefer3d
-
-AmbiRefer3D addresses interactive 3D visual grounding with ambiguous language.
-The baseline has two separately trained stages: Stage 1 fine-tunes a grounding
-backbone on ambiguous multi-target (MT) annotations; Stage 2 selects clarification
-constraints, filters candidates, and predicts when to stop. This release also
-contains the real-scene and synthetic-scene data construction code.
-
-The public project and launchers use `ambirefer3d`. The internal `m3drefclip`
-module and `Multi3DRefer` dataset identifier retain their upstream names for
-Python imports, checkpoint compatibility, and attribution.
-
-| Component | Location |
-|---|---|
-| Stage 1 backbone, losses and evaluation | `m3drefclip/`, `train.py`, `test.py` |
-| Stage 2 semantic constraint model | `stage2_refactor/` |
-| Real scene ambiguous query generation and clarification | `data_construction/real/` |
-| Real object/candidate rendering and annotation conversion | `data_construction/real/object_render/`, `data_construction/real/converters/` |
-| 3D-FRONT generation, degradation and visual clarification | `data_construction/synthetic/generate_dataset.py` |
-| Data contracts and known gaps | `docs/DATA_CONSTRUCTION.md`, `docs/RELEASE_AUDIT.md` |
-| GitHub publication and source audit | `GITHUB_RELEASE.md`, `tools/audit_release.py` |
+# Ambirefer3d
 
 ## Environment
 
@@ -39,7 +19,16 @@ The synthetic generator runs through BlenderProc in its Blender environment;
 see `data_construction/synthetic/requirements.txt` and the data construction guide.
 The LLM/VLM clients require the `openai` package and an OpenAI-compatible server.
 
-## Configure External Artifacts
+## DataSet
+
+### Data and Path Configuration
+
+No point clouds, licensed 3D assets, generated annotations, features, model
+weights, logs, or original Git history are bundled. Required artifacts and
+their schemas are listed in [Data Construction](docs/DATA_CONSTRUCTION.md).
+
+Configure your dataset, feature-cache and checkpoint paths before running the
+construction, training or validation scripts:
 
 ```bash
 cp .env.example .env
@@ -49,11 +38,51 @@ source .env
 set +a
 ```
 
-No point clouds, licensed 3D assets, generated annotations, features, model
-weights, logs, or original Git history are bundled. Required artifacts are
-listed in `docs/DATA_CONSTRUCTION.md`. Do not commit your `.env` file.
+Keep `.env` outside Git. Use scene-disjoint official training/validation splits
+for both stages.
 
-## Stage 1: MT Fine-tuning
+### Real and Synthetic Data Construction
+
+Real ScanNet scene query generation and clarification are provided under
+`data_construction/real/`. The launcher requires upstream scene graphs,
+existing object renders, input descriptions and configured text/VLM services:
+
+```bash
+bash scripts/construct_ambirefer3d_real.sh
+```
+
+Synthetic 3D-FRONT scene processing, query generation/degradation and visual
+clarification are provided under `data_construction/synthetic/`. Configure the
+licensed scene/model/texture assets and BlenderProc before running:
+
+```bash
+bash scripts/construct_ambirefer3d_synthetic.sh
+```
+
+See [Data Construction](docs/DATA_CONSTRUCTION.md) for the full input/output
+contracts, sharding options and remaining construction requirements.
+
+### Stage 2 Round Data
+
+Convert training and validation dialogue metadata into separate round datasets:
+
+```bash
+python -m stage2_refactor.data.convert_dialogue_json_semantic \
+  --scene_json /path/to/train_dialogues.json \
+  --out_round_json /path/to/train_rounds.json --seed 0
+python -m stage2_refactor.data.convert_dialogue_json_semantic \
+  --scene_json /path/to/val_dialogues.json \
+  --out_round_json /path/to/val_rounds.json --seed 0
+```
+
+Stage 2 additionally needs a candidate image-feature cache. Its preparation
+and candidate-identity requirements are described in the data construction guide.
+The training and validation launchers check candidate IDs and cached image
+features before running.
+
+## Training
+
+### Stage 1: MT Fine-tuning
 
 Stage 1 uses all query-compatible annotated object IDs as its positive set,
 while `true_target_id` records the user's intended object for Stage 2. Training
@@ -73,6 +102,28 @@ same experiment. `MAX_EPOCHS`, `DEVICES`, `BATCH_SIZE`, `EXP_NAME`, and
 `AMBIREFER3D_OUTPUT_ROOT` control runtime and output placement. Extra Hydra
 overrides can be appended to the command.
 
+### Stage 2: Interactive Disambiguation
+
+Train Stage 2 using the prepared round datasets and candidate image features:
+
+```bash
+STAGE2_TRAIN_JSON=/path/to/train_rounds.json \
+STAGE2_VAL_JSON=/path/to/val_rounds.json \
+STAGE2_IMG_CACHE=/path/to/imgfeat_cache \
+bash scripts/train_ambirefer3d_stage2.sh
+```
+
+The launcher freezes the vocabulary/constraint inventory in `spec.json` built
+from training rows; the validation split does not define trainable constraint
+classes. Preserve this specification together with the trained checkpoint.
+
+Advanced trajectory/joint modules from the current worktree are retained as
+optional implementation code; the baseline launchers keep them disabled.
+
+## Validation
+
+### Stage 1
+
 ```bash
 STAGE1_CKPT=/path/to/trained_stage1.ckpt \
 bash scripts/eval_ambirefer3d_stage1.sh
@@ -83,29 +134,9 @@ and recall at IoU 0.25/0.5, target survival with IoU, and target survival withou
 IoU when point-instance assignments and intended-target metadata are available.
 Empty non-MT subgroup metrics are undefined on an MT-only split.
 
-## Stage 2: Interactive Disambiguation
+### Stage 2
 
-Generate round rows from dialogue metadata, then validate candidates and image
-features before training:
-
-```bash
-python -m stage2_refactor.data.convert_dialogue_json_semantic \
-  --scene_json /path/to/train_dialogues.json \
-  --out_round_json /path/to/train_rounds.json --seed 0
-python -m stage2_refactor.data.convert_dialogue_json_semantic \
-  --scene_json /path/to/val_dialogues.json \
-  --out_round_json /path/to/val_rounds.json --seed 0
-
-STAGE2_TRAIN_JSON=/path/to/train_rounds.json \
-STAGE2_VAL_JSON=/path/to/val_rounds.json \
-STAGE2_IMG_CACHE=/path/to/imgfeat_cache \
-bash scripts/train_ambirefer3d_stage2.sh
-```
-
-Use scene-disjoint official training/validation JSON files. The launcher freezes
-the vocabulary/constraint inventory in `spec.json` built from training rows;
-the validation split does not define trainable constraint classes. Evaluate
-with the same specification and architecture:
+Evaluate with the same training specification and architecture:
 
 ```bash
 STAGE2_CKPT=/path/to/stage2.pt \
@@ -122,21 +153,20 @@ initial survival equal to one; it must be labelled as an oracle-candidate
 experiment, not an end-to-end Stage 1 result. The release guide describes the
 additional mapping needed for actual backbone proposals.
 
-## Source Validation
+### Source Checks
 
 ```bash
-python tools/audit_release.py
-python -m unittest discover -s tests -p test_release_contracts.py
+PYTHONDONTWRITEBYTECODE=1 python tools/audit_release.py
+PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -p test_release_contracts.py
 ```
 
-`docs/RELEASE_AUDIT.md` distinguishes corrected packaging issues, external
-requirements, and unresolved reproduction gaps. Advanced trajectory/joint
-modules from the current worktree are retained as optional implementation
-code; the baseline launchers keep them disabled.
+[Release Audit](docs/RELEASE_AUDIT.md) distinguishes corrected packaging issues,
+external requirements, and unresolved reproduction gaps. Publication commands
+are provided in [GitHub Release](GITHUB_RELEASE.md).
 
-## Attribution
+---
 
 Stage 1 extends the Multi3DRefer / M3DRef-CLIP implementation. Its original
 MIT copyright and license are retained in `LICENSE`. BlenderProc is an external
 dependency; its license is included alongside the synthetic construction code.
-See `THIRD_PARTY_NOTICES.md`. Preserve these notices when publishing.
+See [Third-Party Notices](THIRD_PARTY_NOTICES.md). Preserve these notices when publishing.
