@@ -26,8 +26,4 @@ python train.py data=multi3drefer logger=null \
   "+trainer.devices=${DEVICES:-1}" \
   +trainer.strategy=ddp_find_unused_parameters_true \
   "data.dataloader.batch_size=${BATCH_SIZE:-4}" \
-  model.stage2.enabled=False model.trajectory_adapter.enabled=False \
-  model.online_trajectory.enabled=False data.online_trajectory.enabled=False \
-  model.loss.preference_loss.enabled=False model.loss.metric_loss.enabled=False \
-  model.loss.counterfactual_pair_loss.enabled=False \
   "${EXTRA[@]}" "$@"

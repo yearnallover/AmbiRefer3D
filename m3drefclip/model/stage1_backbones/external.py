@@ -78,7 +78,7 @@ class _ExternalStage1Base(nn.Module):
 
     def loss(self, data_dict, output_dict):
         # The official checkpoints do not expose detector supervision in the
-        # Multi3DRefer batch format. Grounding, trajectory, and Stage2 losses
+
         # still update every trainable module used by the forward graph.
         return {}
 
@@ -88,7 +88,7 @@ class BUTDDETRStage1Backbone(_ExternalStage1Base):
 
     BUTD-DETR predicts language-conditioned DETR queries. The framework uses
     one language item per scene for this backbone so query slots remain the
-    candidate identity across trajectory rounds.
+    candidate identity across grounding queries.
     """
 
     def __init__(
@@ -236,7 +236,7 @@ class BUTDDETRStage1Backbone(_ExternalStage1Base):
         return self.scene_cache.get(str(path), loader)
 
     def encode_scene(self, data_dict):
-        # BUTD-DETR performs joint language/scene encoding in ground_queries.
+
         return {"scene_id": tuple(data_dict["scene_id"])}
 
     def _span_positive_map(self, texts, token_count, device):
@@ -430,7 +430,7 @@ class VistaStage1Backbone(_ExternalStage1Base):
             # The official flag is applied before the spatial layers are
             # constructed, so those layers accidentally remain trainable.
             # Freeze the complete pretrained object tokenizer for stable
-            # trajectory post-training; cross-modal Stage1 remains trainable.
+
             _freeze(self.point_encoder)
         self.visual_projection = nn.Linear(768, self.proposal_dim)
         self.object_projection = nn.Linear(768, self.common_dim)
@@ -617,7 +617,7 @@ class TSP3DStage1Backbone(_ExternalStage1Base):
 
     TSP3D's native predictions are text-guided sparse voxels rather than fixed
     DETR slots. The first query therefore selects the geometric top-K anchors.
-    Later trajectory queries rerun the official text-guided head, but rescore
+    Additional queries rerun the official text-guided head, but rescore
     those fixed anchors so candidate identity is preserved across rounds.
     """
 
@@ -896,7 +896,7 @@ class TSP3DStage1Backbone(_ExternalStage1Base):
         if chunk_size != 1:
             raise ValueError(
                 "TSP3D integration requires data.chunk_size=1 because its first "
-                "query defines the stable trajectory candidate anchors."
+                "query defines the stable proposal candidates."
             )
         raw = self._run_raw_query(data_dict, scene_output)
         query_features = raw["text_features"][:, 0]

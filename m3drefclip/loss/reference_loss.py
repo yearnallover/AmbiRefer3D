@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from scipy.optimize import linear_sum_assignment
 from m3drefclip.util.utils import get_batch_aabb_pair_ious
-from m3drefclip.loss.sample_weighting import weighted_mean
 
 
 class RefBCELoss(pl.LightningModule):
@@ -18,7 +17,7 @@ class RefBCELoss(pl.LightningModule):
 
     def forward(
         self, output_dict, pred_aabbs, pred_scores, target,
-        gt_target_objs_mask, gt_aabb_offset, sample_weights=None,
+        gt_target_objs_mask, gt_aabb_offset,
     ):
         batch_size = pred_aabbs.shape[0]
         output_dict["gt_labels"] = torch.zeros(
@@ -68,7 +67,7 @@ class RefBCELoss(pl.LightningModule):
             output_dict["gt_labels"].flatten(start_dim=0, end_dim=1),
             reduction="none",
         )
-        return weighted_mean(per_query_loss, sample_weights)
+        return per_query_loss.mean()
 
 
 class RefCELoss(pl.LightningModule):
@@ -82,7 +81,6 @@ class RefCELoss(pl.LightningModule):
     def forward(
         self, output_dict, pred_aabb_min_max_bounds, pred_scores,
         gt_aabb_min_max_bounds, gt_target_objs_mask, gt_aabb_offset,
-        sample_weights=None,
     ):
         batch_size = pred_aabb_min_max_bounds.shape[0]
         output_dict["gt_labels"] = torch.zeros(
@@ -118,4 +116,4 @@ class RefCELoss(pl.LightningModule):
             output_dict["gt_labels"].flatten(start_dim=0, end_dim=1),
             reduction="none",
         )
-        return weighted_mean(per_query_loss, sample_weights)
+        return per_query_loss.mean()

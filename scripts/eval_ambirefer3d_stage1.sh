@@ -11,8 +11,7 @@ python dataset/multi3drefer/metadata/make_mt_json.py --input "$MT_SOURCE_VAL_JSO
 python validate_multi_ckpts.py --ckpt "$STAGE1_CKPT" \
   --out_dir "$OUT/ambirefer3d_stage1_eval" --devices 1 --export_query_metrics \
   data=multi3drefer "data.lang_metadata.val_language_data=$OUT/ambirefer3d_metadata/val_mt.json" \
-  data.dataloader.batch_size=1 model.stage2.enabled=False "$@"
+  data.dataloader.batch_size=1 "$@"
 python test.py data=multi3drefer "ckpt_path=$STAGE1_CKPT" \
   "pred_path=$OUT/ambirefer3d_stage1_predictions" \
-  "data.lang_metadata.val_language_data=$OUT/ambirefer3d_metadata/val_mt.json" \
-  model.stage2.enabled=False model.trajectory_adapter.enabled=False logger=null
+  "data.lang_metadata.val_language_data=$OUT/ambirefer3d_metadata/val_mt.json" \ logger=null

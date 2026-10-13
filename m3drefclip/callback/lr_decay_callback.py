@@ -14,7 +14,7 @@ class LrDecayCallback(Callback):
         decay_epochs = max(end_epoch - start_epoch, 1)
         progress = min(max((current_epoch - start_epoch) / decay_epochs, 0.0), 1.0)
         for param_group in trainer.optimizers[0].param_groups:
-            # Separate Stage1/Stage2 parameter groups can have different learning
+
             # rates. Preserve each group's own starting rate during decay and
             # never raise a deliberately small learning rate toward the global
             # floor.

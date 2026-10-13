@@ -1,47 +1,19 @@
-# Managed by Hydra
-
 defaults:
-  - scannetv2
-
+- scannetv2
 lang_dataset: Multi3DRefer
 lang_dataset_path: ${data.data_root_path}/multi3drefer
-
 lang_metadata:
-  metadata_root_path: ${data.lang_dataset_path}/metadata
+  metadata_root_path: ${project_root_path}/dataset/ambirefer3d_annotations/real/stage1
   metadata_variant: minimal
   metadata_variant_dir: ${data.lang_metadata.metadata_variant}_json
   metadata_file_prefix: ambi_${data.lang_metadata.metadata_variant}
-  train_language_data: ${oc.env:MULTI3DREFER_TRAIN_JSON,${data.lang_metadata.metadata_root_path}/result_m3dref_train.json}
-  val_language_data: ${oc.env:MULTI3DREFER_VAL_JSON,${data.lang_metadata.metadata_root_path}/result_m3dref_val_minimal_t.json}
-  test_language_data: ${oc.env:MULTI3DREFER_TEST_JSON,${data.lang_metadata.metadata_root_path}/result_m3dref_val_minimal_t.json}
-
-# object_ids keeps the ground-truth multi-object targets.
-# candidate_ids can be used for broader same-category supervision experiments.
+  train_language_data: ${oc.env:MULTI3DREFER_TRAIN_JSON,${data.lang_metadata.metadata_root_path}/train_mt.json}
+  val_language_data: ${oc.env:MULTI3DREFER_VAL_JSON,${data.lang_metadata.metadata_root_path}/val_minimal_mt.json}
+  test_language_data: ${oc.env:MULTI3DREFER_TEST_JSON,${data.lang_metadata.metadata_root_path}/val_minimal_mt.json}
 positive_object_key: object_ids
-
 chunk_size: 8
-
-# Enable only for metadata produced by build_targeted_training_bundle.py.
-# It keeps both inverse-query sides inside the same scene-language chunk.
-counterfactual_pair_packing:
-  enabled: False
-  seed: 3dvg-counterfactual-pairs-v1
-
-online_trajectory:
-  enabled: False
-  path: ${oc.env:TRAJECTORY_SOURCE_JSON,${data.lang_metadata.metadata_root_path}/ambirefer3d_dialogues.json}
-  ambiguity_type: ${data.lang_metadata.metadata_variant}
-  max_rounds: 3
-  # Never attach a trajectory whose first query differs from the language row.
-  strict_query_alignment: True
-  # Generated compatibility sets occasionally omit the annotated true target.
-  repair_target_set: True
-  # Trajectory post-training enables this after switching to aligned metadata.
-  require_train_match: False
-
 evaluator:
   _target_: m3drefclip.evaluation.multi3drefer_evaluator.Multi3DReferEvaluator
-  verbose: False
+  verbose: false
   metric_name: f1
-
 monitor_value: f1@0.5_overall

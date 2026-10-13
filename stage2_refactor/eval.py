@@ -49,7 +49,7 @@ def main():
         use_bbox_geom=bool(args.use_bbox_geom),
     )
 
-    model = Stage2NetSemantic(vocab_size=len(vocab.itos), cfg=cfg, num_constraints=num_constraints).to(device)
+    model = Stage2NetSemantic(vocab_size=len(vocab.itos), cfg=cfg, num_constraints=num_constraints, num_rel=max(rel2id.values()) + 1, num_attr=max(attr2id.values()) + 1).to(device)
     model.load_state_dict(ckpt["state_dict"], strict=True)
     model.eval()
 

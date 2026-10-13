@@ -1,15 +1,14 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
+import re
 import torch
-
-_SELECTION_MARKER = "|SELECT|"
 
 def norm(s: str) -> str:
     return (s or "").strip().lower()
 
-def constraint_base_key(c: Dict[str, Any]) -> str:
+def constraint_to_key(c: Dict[str, Any]) -> str:
     c = c or {}
     ctype = (c.get("ctype") or "REL").upper()
     if ctype == "ATTR":
@@ -19,43 +18,6 @@ def constraint_base_key(c: Dict[str, Any]) -> str:
     rel = norm(c.get("rel") or "near")
     lm = norm(c.get("landmark_text") or "")
     return f"REL|{rel}|{lm}"
-
-
-def constraint_to_key(c: Dict[str, Any]) -> str:
-    """Return a stable key, preserving the legacy format when no selection is given."""
-    base = constraint_base_key(c)
-    selection_mode = norm(c.get("selection_mode") or "")
-    keep_count = c.get("keep_count")
-    if not selection_mode and keep_count is None:
-        return base
-    selection_mode = selection_mode or "top_k"
-    try:
-        keep_count = int(keep_count)
-    except (TypeError, ValueError):
-        keep_count = 0
-    return f"{base}{_SELECTION_MARKER}{selection_mode}|{keep_count}"
-
-
-def base_constraint_key(key: str) -> str:
-    """Strip the v2 selection suffix for backward-compatible checkpoint remapping."""
-    return str(key).split(_SELECTION_MARKER, 1)[0]
-
-
-def constraint_field_text(c: Dict[str, Any]) -> str:
-    c = c or {}
-    if (c.get("ctype") or "REL").upper() == "ATTR":
-        text = norm(c.get("attr_val_text") or "")
-    else:
-        text = norm(c.get("landmark_text") or "")
-    keep_count = c.get("keep_count")
-    if keep_count is None:
-        return text
-    try:
-        keep_count = int(keep_count)
-    except (TypeError, ValueError):
-        return text
-    selection = f"keep {keep_count} candidate" + ("s" if keep_count != 1 else "")
-    return f"{text} {selection}".strip()
 
 @dataclass
 class ConstraintRow:
@@ -85,23 +47,14 @@ class ConstraintTable:
         return ConstraintTable(uniq, rel2id=rel2id, attr2id=attr2id)
 
     def _parse_key(self, key: str) -> ConstraintRow:
-        # Legacy: REL|near|cabinet. V2: REL|near|cabinet|SELECT|top_k|2.
-        base_key, *selection_parts = key.split(_SELECTION_MARKER, 1)
-        parts = base_key.split("|")
+        # key format: REL|near|cabinet  or ATTR|color|brown
+        parts = key.split("|")
         if len(parts) < 3:
             # fallback
             parts = ["REL", "near", ""]
         ctype = parts[0].upper()
         a = norm(parts[1])
         b = norm("|".join(parts[2:]))  # allow landmark/value to contain pipes (rare)
-        if selection_parts:
-            selection_fields = selection_parts[0].split("|")
-            if len(selection_fields) >= 2:
-                try:
-                    keep_count = int(selection_fields[-1])
-                    b = f"{b} keep {keep_count} candidate" + ("s" if keep_count != 1 else "")
-                except ValueError:
-                    pass
 
         if ctype == "ATTR":
             ctype_id = 1
@@ -153,3 +106,4 @@ class ConstraintTable:
         batch["c_attr_id"] = c_attr
         batch["field_ids"] = field_ids
         return batch
+

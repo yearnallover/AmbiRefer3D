@@ -45,15 +45,8 @@ def _collate_fn(batch):
 
     # default collation
     default_collate_item_names = ["scene_id", "object_id", "ann_id", "clip_tokens", "scene_center_xyz"]
-    for optional_name in (
-        "true_target_id", "trajectory_clip_tokens", "trajectory_round_mask",
-        "trajectory_feedback", "negative_trajectory_clip_tokens",
-        "negative_trajectory_round_mask", "negative_trajectory_feedback",
-        "trajectory_target_obj_id", "trajectory_source_ann_id", "sample_weight",
-        "is_formal_target_leaf"
-    ):
-        if optional_name in batch[0]:
-            default_collate_item_names.append(optional_name)
+    if "true_target_id" in batch[0]:
+        default_collate_item_names.append("true_target_id")
     default_collate_data = []
 
     point_count_total = 0
@@ -87,18 +80,6 @@ def _collate_fn(batch):
     data_dict.update(default_collate(default_collate_data))
     if "query_text" in batch[0]:
         data_dict["query_text"] = [list(item["query_text"]) for item in batch]
-    for pair_key in ("diagnostic_sample_id", "counterfactual_pair_id"):
-        if pair_key in batch[0]:
-            data_dict[pair_key] = [list(item[pair_key]) for item in batch]
-    if "trajectory_id" in batch[0]:
-        data_dict["trajectory_id"] = [list(item["trajectory_id"]) for item in batch]
-    for text_key in (
-        "trajectory_query_texts", "negative_trajectory_query_texts"
-    ):
-        if text_key in batch[0]:
-            data_dict[text_key] = [
-                [list(rounds) for rounds in item[text_key]] for item in batch
-            ]
     lang_chunk_size = data_dict["ann_id"].shape[1]
 
     # sparse collation
@@ -117,13 +98,6 @@ def _collate_fn(batch):
     data_dict["gt_target_obj_id_mask"] = torch.empty(
         size=(aabb_count_total, lang_chunk_size), dtype=torch.bool
     )
-    trajectory_round_count = None
-    if "trajectory_candidate_gt_mask" in batch[0]:
-        trajectory_round_count = batch[0]["trajectory_candidate_gt_mask"].shape[1]
-        data_dict["trajectory_candidate_gt_mask"] = torch.zeros(
-            size=(aabb_count_total, lang_chunk_size, trajectory_round_count),
-            dtype=torch.bool,
-        )
 
     num_voxel_batch = 0
     voxel_xyz_list = []
@@ -168,12 +142,6 @@ def _collate_fn(batch):
             torch.from_numpy(b["gt_aabb_obj_ids"])
         data_dict["gt_target_obj_id_mask"][batch_aabbs_start_idx:batch_aabbs_end_idx] = \
             torch.from_numpy(b["gt_target_obj_id_mask"]).permute(dims=(1, 0))
-        if trajectory_round_count is not None:
-            data_dict["trajectory_candidate_gt_mask"][
-                batch_aabbs_start_idx:batch_aabbs_end_idx
-            ] = torch.from_numpy(
-                b["trajectory_candidate_gt_mask"]
-            ).permute(2, 0, 1)
 
     data_dict["instance_num_point"] = torch.cat(instance_num_point, dim=0)
 
@@ -182,3 +150,4 @@ def _collate_fn(batch):
     )
     data_dict["voxel_point_map"] = torch.cat(voxel_point_map_list, dim=0)
     return data_dict
+

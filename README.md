@@ -3,10 +3,6 @@
 [[paper]](https://openreview.net/pdf?id=tkOMvqB6E9)
 
 ## Environment
-
-The existing local training environment is `conda activate m3drefclip`. On a new
-machine, create the public environment and compile the CUDA dependencies:
-
 ```bash
 conda env create -f environment.yml
 conda activate ambirefer3d
@@ -23,11 +19,39 @@ The LLM/VLM clients require the `openai` package and an OpenAI-compatible server
 
 ## DataSet
 
+### Download
+
+Download the AmbiRefer3D real-scene (ScanNet) annotation JSON package:
+
+[[dataset]](https://github.com/yearnallover/AmbiRefer3D/raw/refs/heads/annotations/downloads/ambirefer3d-annotations.tar.gz)
+
+| Dataset | Training Queries | Validation Queries | Test Queries |
+|---|---:|---:|---:|
+| Real scenes (ScanNet) | 33,039 | 8,304 | - |
+
+The package contains ambiguous grounding annotations, clarification JSON for
+the `minimal`, `no_spatial`, and `no_visual` settings, real-scene Stage 2 round
+samples, scene split lists, and a manifest of counts and file hashes.
+The download contains only real-scene annotations; 3D-FRONT JSON files are
+excluded. Synthetic data construction code remains available in the repository.
+
+For MT fine-tuning, `real/stage1/train_mt.json` and
+`real/stage1/val_minimal_mt.json` provide 23,566 and 2,680 consistent MT rows.
+The original annotations are also retained; the manifest documents the checks
+used to select the MT subsets without changing their labels.
+
+```bash
+mkdir -p dataset
+curl -L --fail \
+  https://github.com/yearnallover/AmbiRefer3D/raw/refs/heads/annotations/downloads/ambirefer3d-annotations.tar.gz \
+  -o /tmp/ambirefer3d-annotations.tar.gz
+tar -xzf /tmp/ambirefer3d-annotations.tar.gz -C dataset
+```
+
 ### Data and Path Configuration
 
-No point clouds, licensed 3D assets, generated annotations, features, model
-weights, logs, or original Git history are bundled. Required artifacts and
-their schemas are listed in [Data Construction](docs/DATA_CONSTRUCTION.md).
+The extracted package is located at `dataset/ambirefer3d_annotations/`. Its
+schemas are described in [Data Construction](docs/DATA_CONSTRUCTION.md).
 
 Configure your dataset, feature-cache and checkpoint paths before running the
 construction, training or validation scripts:
@@ -97,8 +121,7 @@ MT_SOURCE_VAL_JSON=/path/to/ambiguous_val.json \
 bash scripts/train_ambirefer3d_stage1.sh
 ```
 
-The launcher filters `eval_type=mt`, then disables Stage 2, the trajectory
-adapter, online trajectory supervision and post-training objectives. It loads
+The launcher filters `eval_type=mt` and fine-tunes the Stage 1 backbone. It loads
 initial weights using `init_from_ckpt`; `ckpt_path` is reserved for resuming the
 same experiment. `MAX_EPOCHS`, `DEVICES`, `BATCH_SIZE`, `EXP_NAME`, and
 `AMBIREFER3D_OUTPUT_ROOT` control runtime and output placement. Extra Hydra
@@ -118,9 +141,6 @@ bash scripts/train_ambirefer3d_stage2.sh
 The launcher freezes the vocabulary/constraint inventory in `spec.json` built
 from training rows; the validation split does not define trainable constraint
 classes. Preserve this specification together with the trained checkpoint.
-
-Advanced trajectory/joint modules from the current worktree are retained as
-optional implementation code; the baseline launchers keep them disabled.
 
 ## Validation
 
@@ -156,8 +176,9 @@ experiment, not an end-to-end Stage 1 result. The release guide describes the
 additional mapping needed for actual backbone proposals.
 
 
-## Bibtex
-```
+## Citation
+
+```bibtex
 @inproceedings{zhuambirefer3d,
   title={AmbiRefer3D: 3D Visual Grounding with Referential Ambiguity},
   author={Zhu, Rongjiang and Kang, Wei and Liu, Zeqi and Yang, Shuo and Wu, Xinxiao and others},

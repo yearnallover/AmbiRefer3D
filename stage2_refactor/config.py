@@ -14,20 +14,6 @@ class TrainConfig:
     use_imgfeat: bool = True
     imgfeat_dim: int = 768  # ViT-B/32
     use_bbox_geom: bool = False  # Path A default: rely on image; you can turn on later
-    use_relative_geom: bool = False
-    use_semantic_label: bool = False
-    num_semantic_classes: int = 256
-    use_stage1_features: bool = False
-    stage1_feat_dim: int = 128
-    use_stage1_quality: bool = False
-    use_scene_context_attention: bool = False
-    use_constraint_conditioned_context: bool = False
-    # False preserves the behavior of checkpoints trained before the audit.
-    selector_pre_action_state: bool = False
-    stage1_cache_dir: str = ""
-    stage1_feature_key: str = "features_3d"
-    use_stage1_cache_bboxes: bool = False
-    require_stage1_cache: bool = False
 
     # model dims
     d_text: int = 256
@@ -43,11 +29,3 @@ class TrainConfig:
     grad_clip: float = 1.0
     seed: int = 42
 
-    # losses
-    w_policy: float = 0.0   # Path A: optional, keep 0 for now
-    w_mask: float = 1.0
-    w_rank: float = 0.5
-    w_stop: float = 0.2
-
-    rank_margin: float = 0.3
-    rank_pairs: int = 8

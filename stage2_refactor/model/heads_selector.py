@@ -1,6 +1,6 @@
 # model/heads_selector_transformer.py
 from __future__ import annotations
-from typing import Dict, Optional
+from typing import Optional
 
 import torch
 from torch import Tensor
@@ -30,18 +30,11 @@ class ConstraintSelectorHead(nn.Module):
         num_layers: int = 2,
         dim_ff: int = 512,
         dropout: float = 0.1,
-        vocab_size: int = 0,
-        num_rel: int = 0,
-        num_attr: int = 0,
-        use_semantic_constraint_scoring: bool = False,
     ):
         super().__init__()
         self.d_model = d_model
         self.num_constraints = num_constraints
         self.d_cand = d_cand
-        self.use_semantic_constraint_scoring = bool(
-            use_semantic_constraint_scoring
-        )
 
         # candidate triple -> d_model
         self.cand_proj = nn.Sequential(
@@ -79,38 +72,6 @@ class ConstraintSelectorHead(nn.Module):
         self.encoder = nn.TransformerEncoder(enc_layer, num_layers=num_layers)
 
         self.out = nn.Linear(d_model, num_constraints)
-        if self.use_semantic_constraint_scoring:
-            self.constraint_ctype = nn.Embedding(2, d_model)
-            self.constraint_rel = nn.Embedding(num_rel, d_model)
-            self.constraint_attr = nn.Embedding(num_attr, d_model)
-            self.constraint_word = nn.Embedding(
-                vocab_size, d_model, padding_idx=0
-            )
-            self.constraint_fuse = nn.Sequential(
-                nn.Linear(4 * d_model, d_model),
-                nn.GELU(),
-                nn.LayerNorm(d_model),
-            )
-
-    def _semantic_constraint_tokens(
-        self, bank: Dict[str, Tensor]
-    ) -> Tensor:
-        field_ids = bank["field_ids"].long()
-        field_mask = field_ids.ne(0).unsqueeze(-1)
-        field_words = self.constraint_word(field_ids)
-        field = (field_words * field_mask.float()).sum(dim=1)
-        field = field / field_mask.sum(dim=1).clamp_min(1)
-        return self.constraint_fuse(
-            torch.cat(
-                (
-                    self.constraint_ctype(bank["ctype_ids"].long()),
-                    self.constraint_rel(bank["rel_ids"].long()),
-                    self.constraint_attr(bank["attr_ids"].long()),
-                    field,
-                ),
-                dim=-1,
-            )
-        )
 
     def forward(
         self,
@@ -120,7 +81,6 @@ class ConstraintSelectorHead(nn.Module):
         alive_mask: Tensor,               # [B, C] float 0/1
         target_summary: Optional[Tensor] = None,   # [B, d_cand] or None
         used_mask: Optional[Tensor] = None,        # [B, Nc] or None
-        constraint_bank: Optional[Dict[str, Tensor]] = None,
     ) -> Tensor:
         B, C, D = cand_feat.shape
         device = cand_feat.device
@@ -165,15 +125,7 @@ class ConstraintSelectorHead(nn.Module):
         h = self.encoder(x, src_key_padding_mask=key_padding_mask)    # [B,2+C,d_model]
         cls_h = h[:, 0, :]                                            # [B,d_model]
 
-        if self.use_semantic_constraint_scoring and constraint_bank is not None:
-            constraint_tokens = self._semantic_constraint_tokens(constraint_bank)
-            logits = torch.matmul(cls_h, constraint_tokens.transpose(0, 1))
-            logits = logits / (self.d_model ** 0.5)
-            # Keep a small class-specific residual for frequency priors while
-            # the semantic branch shares evidence across long-tail constraints.
-            logits = logits + 0.05 * self.out(cls_h)
-        else:
-            logits = self.out(cls_h)                                  # [B,Nc]
+        logits = self.out(cls_h)                                      # [B,Nc]
         if used_mask is not None:
             logits = logits.masked_fill(used_mask > 0, -1e9)
 

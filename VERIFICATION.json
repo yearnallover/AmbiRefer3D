@@ -29,6 +29,14 @@
     "passed": true,
     "exit_code": 0
   },
+  "stage1_module_import": {
+    "passed": true,
+    "exit_code": 0
+  },
+  "pointgroup_regression": {
+    "passed": true,
+    "exit_code": 0
+  },
   "stage1_full_gpu_training": {
     "executed": false,
     "reason": "Source packaging only; real scenes and checkpoints are external"
@@ -37,15 +45,5 @@
     "executed": false,
     "reason": "Requires licensed assets, upstream graphs/renders and configured LLM/VLM services"
   },
-  "passed": true,
-  "package_metadata": {
-    "passed": true,
-    "distribution_name": "ambirefer3d"
-  },
-  "git_ignore_source_tracking": {
-    "passed": true
-  },
-  "stage2_feature_cli": {
-    "passed": true
-  }
+  "passed": true
 }

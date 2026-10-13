@@ -1,31 +1,23 @@
-# Publish ambirefer3d
+# AmbiRefer3D Publication
 
-The prepared source directory is suitable for a fresh GitHub repository. It
-contains no original Git history and no inherited remote. Read
-`docs/RELEASE_AUDIT.md` before documenting reproduction claims.
-
-```bash
-cd /path/to/ambirefer3d
-python tools/audit_release.py
-git init -b main
-git add .
-git diff --cached --stat
-git commit -m "Release AmbiRefer3D source code"
-git remote add origin git@github.com:YOUR_ACCOUNT/ambirefer3d.git
-git push -u origin main
-```
-
-Create an empty GitHub repository named `ambirefer3d` before adding the remote.
-The archive itself should be downloaded/extracted locally, not committed into
-the repository. Keep credentials in an ignored `.env` file. Dataset and model
-download links can be added after the corresponding artifacts are prepared.
-
-Repackage the source to an external destination:
+The paper implementation is organized into independent Stage 1 grounding,
+Stage 2 disambiguation and data construction components. Before publishing a
+source update, run:
 
 ```bash
-python tools/package_release.py --output /path/to/ambirefer3d-code.tar.gz
+PYTHONDONTWRITEBYTECODE=1 python tools/audit_release.py
+PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -p test_release_contracts.py
+git diff --stat
 ```
 
-The packager runs the source audit, writes a single `ambirefer3d/` archive root,
-and creates a SHA256 sidecar. It excludes `.git`, local `.env` and generated
-artifacts. This release has not been pushed to GitHub automatically.
+The annotation archive and its SHA256 sidecar are published on the `annotations`
+branch of `yearnallover/AmbiRefer3D`. The README links directly to those assets.
+The annotation manifest records file hashes, scene splits and row counts.
+
+The source archive contains a single `ambirefer3d/` directory and omits Git
+metadata. Extract it before creating a fresh repository. Keep local `.env`,
+point-cloud features, model weights and generated logs outside source commits.
+
+```bash
+python tools/package_release.py --output /path/to/ambirefer3d-paper-code.tar.gz
+```

@@ -94,11 +94,7 @@ def make_dataloader(samples, vocab, ctable, args, shuffle: bool):
         imgfeat_dim=768,
         use_imgfeat=True,
         use_bbox_geom=bool(args.use_bbox_geom),
-        use_relative_geom=bool(args.use_relative_geom),
-        use_semantic_label=bool(args.use_semantic_label),
-        use_stage1_features=bool(args.use_stage1_features),
-        stage1_feat_dim=args.stage1_feat_dim,
-        use_stage1_quality=bool(args.use_stage1_quality),
+
         constraint_table=ctable,
     )
     bs = args.batch_size if shuffle else args.eval_batch_size
@@ -317,11 +313,7 @@ def main():
     ap.add_argument("--weight_decay", type=float, default=1e-2)
     ap.add_argument("--max_len", type=int, default=16)
     ap.add_argument("--use_bbox_geom", type=int, default=0)
-    ap.add_argument("--use_relative_geom", type=int, default=0)
-    ap.add_argument("--use_semantic_label", type=int, default=0)
-    ap.add_argument("--use_stage1_features", type=int, default=0)
-    ap.add_argument("--stage1_feat_dim", type=int, default=128)
-    ap.add_argument("--use_stage1_quality", type=int, default=0)
+
     ap.add_argument("--seed", type=int, default=0)
 
     # rollout eval params
@@ -468,11 +460,7 @@ def main():
         imgfeat_dim=768,
         use_imgfeat=True,
         use_bbox_geom=bool(args.use_bbox_geom),
-        use_relative_geom=bool(args.use_relative_geom),
-        use_semantic_label=bool(args.use_semantic_label),
-        use_stage1_features=bool(args.use_stage1_features),
-        stage1_feat_dim=args.stage1_feat_dim,
-        use_stage1_quality=bool(args.use_stage1_quality),
+
         batch_size=args.batch_size,
         epochs=args.epochs,
         lr=args.lr,
@@ -484,7 +472,7 @@ def main():
     # ---------- model ----------
     
 
-    model = Stage2NetSemantic(vocab_size=len(vocab.itos), cfg=cfg, num_constraints=num_constraints).to(device)
+    model = Stage2NetSemantic(vocab_size=len(vocab.itos), cfg=cfg, num_constraints=num_constraints, num_rel=max(rel2id.values()) + 1, num_attr=max(attr2id.values()) + 1).to(device)
 
     # -------- load pretrained (optional) --------
     if args.load_from_pretrained:
@@ -593,7 +581,7 @@ def main():
                 tot += float(loss.detach().cpu())
                 n += 1
 
-            print(f"[epoch {ep}] train_loss={tot/max(n,1):.4f}")
+            print(f"[epoch {ep + 1}] train_loss={tot/max(n,1):.4f}")
 
         if (ep + 1) % args.eval_every == 0 or (ep == args.epochs - 1) or args.test_only:
             eval_out = run_eval(model, dl_test, ctable, vocab, args,v_target_strategy=v_target_strategy,selector_strategy=args.selector_strategy,eval_mode=args.eval_mode)
@@ -601,7 +589,7 @@ def main():
             eval_out["epoch"] = ep + 1
             eval_history.append(eval_out)
             acc = float(eval_out["acc"])
-            print(f"[epoch {ep}] {metric_line(eval_out)}")
+            print(f"[epoch {ep + 1}] {metric_line(eval_out)}")
             #保存到txt文件中，按照args.round_json_path的basename命名
             if args.test_only:
                 #需要保存到这个out_eval_json相同路径的叫做eval的文件夹中，名字不变
