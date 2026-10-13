@@ -1,0 +1,298 @@
+{
+  "dataset": "AmbiRefer3D",
+  "files": [
+    {
+      "path": "real/stage1/train.json",
+      "kind": "grounding",
+      "rows": 33039,
+      "scenes": 448,
+      "bytes": 7588351,
+      "sha256": "067575023d44a6f68dcfc6eb27350eeeed6d637440d2d262530ff56061cb0472"
+    },
+    {
+      "path": "real/stage1/val.json",
+      "kind": "grounding",
+      "rows": 8304,
+      "scenes": 113,
+      "bytes": 1801220,
+      "sha256": "b603c729e518efa643a12654193598734cdd36cd979bdce3e8c49f1f41009dd3"
+    },
+    {
+      "path": "real/stage1/val_minimal.json",
+      "kind": "grounding",
+      "rows": 2768,
+      "scenes": 113,
+      "bytes": 799281,
+      "sha256": "7fa20c87e5fb92c9433a1f8c025d67e491bcdf41fc26983d7d091421f08246bc"
+    },
+    {
+      "path": "real/stage1/val_no_spatial.json",
+      "kind": "grounding",
+      "rows": 2768,
+      "scenes": 113,
+      "bytes": 787498,
+      "sha256": "18446ec9dba1fd4782b9cdd931c12edaf076a88c9d1e3a0ffad8f3eafc86ae55"
+    },
+    {
+      "path": "real/stage1/val_no_visual.json",
+      "kind": "grounding",
+      "rows": 2768,
+      "scenes": 113,
+      "bytes": 806014,
+      "sha256": "d9fbf17d049f74da22afae275d71e83667d95321ffc15b19a3e6cb9675af7045"
+    },
+    {
+      "path": "real/stage1/val_all.json",
+      "kind": "grounding",
+      "rows": 8304,
+      "scenes": 113,
+      "bytes": 2392791,
+      "sha256": "c7241d2f3d4dd4fb9cd7266661e14bd8b4c0ca53190d766fc2f1301673c631d5"
+    },
+    {
+      "path": "real/dialogues/train.json",
+      "kind": "clarification",
+      "rows": 11013,
+      "scenes": 448,
+      "bytes": 65358181,
+      "sha256": "9f629af075318f7cea14472ce98d687aabc228ece71361ff969c69e3f7cbc716"
+    },
+    {
+      "path": "real/dialogues/val.json",
+      "kind": "clarification",
+      "rows": 2768,
+      "scenes": 113,
+      "bytes": 16323992,
+      "sha256": "bd1f93ce21bf0c6f49b8e8fe9aef987b239f3f385ab13c33a193a1e108c2490a"
+    },
+    {
+      "path": "synthetic/stage1/train.json",
+      "kind": "grounding",
+      "rows": 69867,
+      "scenes": 4726,
+      "bytes": 31079587,
+      "sha256": "4e220ae3c5236ea7316ce46d2e47597aa219670000f3d4acdff7c0e420e455a6"
+    },
+    {
+      "path": "synthetic/stage1/val.json",
+      "kind": "grounding",
+      "rows": 14961,
+      "scenes": 1012,
+      "bytes": 6672510,
+      "sha256": "7eac857e1a3fa581e0b602c17af1737d6afc432e89321616660514a22084f24a"
+    },
+    {
+      "path": "synthetic/stage1/test.json",
+      "kind": "grounding",
+      "rows": 15039,
+      "scenes": 1014,
+      "bytes": 6686617,
+      "sha256": "f1fad2b95113f7f9e6d84d5aa8ac38b59d0a70772ac35a9c10d0ed2e01bfcdc7"
+    },
+    {
+      "path": "synthetic/dialogues/minimal_train.json",
+      "kind": "clarification",
+      "rows": 23289,
+      "scenes": 4726,
+      "bytes": 72353298,
+      "sha256": "70b7514b866fa9ef5e299acd482f57d5f7b90a441e9c4860b8c2c09f53b97f3b"
+    },
+    {
+      "path": "synthetic/dialogues/minimal_val.json",
+      "kind": "clarification",
+      "rows": 4987,
+      "scenes": 1012,
+      "bytes": 15493055,
+      "sha256": "53282f50f498dfbf434231706d4b0f93c8d97b1c5c49964f4ea5ab076405e63f"
+    },
+    {
+      "path": "synthetic/dialogues/minimal_test.json",
+      "kind": "clarification",
+      "rows": 5013,
+      "scenes": 1014,
+      "bytes": 15545397,
+      "sha256": "51b8ece4035da140325c599d26b6924f5fdd535d5f2df71c45f831adb6513435"
+    },
+    {
+      "path": "synthetic/dialogues/minimal_unassigned.json",
+      "kind": "clarification_without_stage1_split",
+      "rows": 15,
+      "scenes": 3,
+      "bytes": 46298,
+      "sha256": "57fa83dd05ae8ee03e1f8462e342f01320dccf778e574736a51b8d52b2a27b18"
+    },
+    {
+      "path": "synthetic/dialogues/no_spatial_train.json",
+      "kind": "clarification",
+      "rows": 23289,
+      "scenes": 4726,
+      "bytes": 76582927,
+      "sha256": "fdd03c6b09182bc93707c13c879d4af1e962b38ac522f5d8e90b2ca9bc7e23a6"
+    },
+    {
+      "path": "synthetic/dialogues/no_spatial_val.json",
+      "kind": "clarification",
+      "rows": 4987,
+      "scenes": 1012,
+      "bytes": 16368586,
+      "sha256": "c313aef40270b77e60483176e9439986dcab0f4bfe9c29a977e49b207873c4e6"
+    },
+    {
+      "path": "synthetic/dialogues/no_spatial_test.json",
+      "kind": "clarification",
+      "rows": 5013,
+      "scenes": 1014,
+      "bytes": 16525858,
+      "sha256": "a411925a9210a6a46fc084f18153bb452fedc8b4289c453f89d0d920ff3fdd6b"
+    },
+    {
+      "path": "synthetic/dialogues/no_spatial_unassigned.json",
+      "kind": "clarification_without_stage1_split",
+      "rows": 15,
+      "scenes": 3,
+      "bytes": 45912,
+      "sha256": "f0cc8fb4c448d594d081f5e715c4980a5d8f35b5d9e6bce11253628c9a2ea171"
+    },
+    {
+      "path": "synthetic/dialogues/no_visual_train.json",
+      "kind": "clarification",
+      "rows": 23289,
+      "scenes": 4726,
+      "bytes": 64747076,
+      "sha256": "d497f2c2faddee97431b6a2fba84047a22aaf881a67bafaa7ed7db5fec591723"
+    },
+    {
+      "path": "synthetic/dialogues/no_visual_val.json",
+      "kind": "clarification",
+      "rows": 4987,
+      "scenes": 1012,
+      "bytes": 13821274,
+      "sha256": "d327bae01da5a7f4073d8541e3204f0f83d37a47c3375c619e3ca764e717bfd4"
+    },
+    {
+      "path": "synthetic/dialogues/no_visual_test.json",
+      "kind": "clarification",
+      "rows": 5013,
+      "scenes": 1014,
+      "bytes": 14029430,
+      "sha256": "5a1f784cd65976b60eaf019ce5a4e9975c94ce1c8f457942bc3f366b0fadb404"
+    },
+    {
+      "path": "synthetic/dialogues/no_visual_unassigned.json",
+      "kind": "clarification_without_stage1_split",
+      "rows": 15,
+      "scenes": 3,
+      "bytes": 41971,
+      "sha256": "e674a196f7452ed726f907e66053252fd1b472eba4803d12acd54c3627178133"
+    },
+    {
+      "path": "real/stage2/train.json",
+      "kind": "supervised_rounds",
+      "rows": 33039,
+      "scenes": 448,
+      "bytes": 12370348,
+      "sha256": "2981dc235a9929f72a72874a55a395b7a4c5ad18c2b3f4f073e3e47f613a7143"
+    },
+    {
+      "path": "real/stage2/val.json",
+      "kind": "supervised_rounds",
+      "rows": 8304,
+      "scenes": 113,
+      "bytes": 3099301,
+      "sha256": "f776bcfbd664cbf4c9fa38ae8d32166997657262dbc36d4af2ddfa569cede5b2"
+    },
+    {
+      "path": "real/stage1/train_mt.json",
+      "kind": "validated_mt_grounding",
+      "rows": 23566,
+      "scenes": 448,
+      "bytes": 5218309,
+      "sha256": "703e2049ec2d2c8ccace99accb0ab9da89032c0af3eaded0a83fd84d9c742408"
+    },
+    {
+      "path": "real/stage1/val_mt.json",
+      "kind": "validated_mt_grounding",
+      "rows": 5959,
+      "scenes": 113,
+      "bytes": 1246359,
+      "sha256": "7682438a8854e12d447082edd0970d2183977d4c3383d6141443c39f41f70850"
+    },
+    {
+      "path": "real/stage1/val_all_mt.json",
+      "kind": "validated_mt_grounding",
+      "rows": 5860,
+      "scenes": 113,
+      "bytes": 1759776,
+      "sha256": "e3475dc00905250f780b38a9c27ebc5c221d932aecf4e8c463d6cb2bafddfc22"
+    },
+    {
+      "path": "real/stage1/val_minimal_mt.json",
+      "kind": "validated_mt_grounding",
+      "rows": 2680,
+      "scenes": 113,
+      "bytes": 779042,
+      "sha256": "03269dc31fc64dffb2f53139d40d5c13dd14484dc79df838d0e0ffe50d559fdc"
+    },
+    {
+      "path": "real/stage1/val_no_spatial_mt.json",
+      "kind": "validated_mt_grounding",
+      "rows": 2066,
+      "scenes": 113,
+      "bytes": 617389,
+      "sha256": "80889706cdcea3c8fc587f4eca0b695592bb9fe044ee422185392efc3bd4bab0"
+    },
+    {
+      "path": "real/stage1/val_no_visual_mt.json",
+      "kind": "validated_mt_grounding",
+      "rows": 1114,
+      "scenes": 111,
+      "bytes": 363347,
+      "sha256": "90c00824533dda2c464a687996cc3fdac1676c6e9921e5526cfd347ef2d336d8"
+    }
+  ],
+  "notes": [
+    "Grounding object_ids preserve the compatible set.",
+    "Intended synthetic target is also exposed as true_target_id.",
+    "Train/val/test scene lists preserve the existing dataset splits.",
+    "Unassigned dialogue rows are separate and are not labelled as official test data.",
+    "Original annotations are retained. Additional *_mt.json files exclude MT rows with fewer than two distinct compatible objects or an explicitly incompatible intended target; labels are not rewritten."
+  ],
+  "annotation_validation": [
+    {
+      "source": "real/stage1/train.json",
+      "mt_rows": 23895,
+      "valid_mt_rows": 23566,
+      "excluded_inconsistent_mt_rows": 329
+    },
+    {
+      "source": "real/stage1/val.json",
+      "mt_rows": 5959,
+      "valid_mt_rows": 5959,
+      "excluded_inconsistent_mt_rows": 0
+    },
+    {
+      "source": "real/stage1/val_all.json",
+      "mt_rows": 5959,
+      "valid_mt_rows": 5860,
+      "excluded_inconsistent_mt_rows": 99
+    },
+    {
+      "source": "real/stage1/val_minimal.json",
+      "mt_rows": 2682,
+      "valid_mt_rows": 2680,
+      "excluded_inconsistent_mt_rows": 2
+    },
+    {
+      "source": "real/stage1/val_no_spatial.json",
+      "mt_rows": 2088,
+      "valid_mt_rows": 2066,
+      "excluded_inconsistent_mt_rows": 22
+    },
+    {
+      "source": "real/stage1/val_no_visual.json",
+      "mt_rows": 1189,
+      "valid_mt_rows": 1114,
+      "excluded_inconsistent_mt_rows": 75
+    }
+  ]
+}
