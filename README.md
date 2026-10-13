@@ -172,3 +172,12 @@ Stage 1 extends the Multi3DRefer / M3DRef-CLIP implementation. Its original
 MIT copyright and license are retained in `LICENSE`. BlenderProc is an external
 dependency; its license is included alongside the synthetic construction code.
 See [Third-Party Notices](THIRD_PARTY_NOTICES.md). Preserve these notices when publishing.
+
+## Bibtex
+```
+@inproceedings{zhuambirefer3d,
+  title={AmbiRefer3D: 3D Visual Grounding with Referential Ambiguity},
+  author={Zhu, Rongjiang and Kang, Wei and Liu, Zeqi and Yang, Shuo and Wu, Xinxiao and others},
+  booktitle={Forty-third International Conference on Machine Learning}
+}
+```
