@@ -155,23 +155,6 @@ initial survival equal to one; it must be labelled as an oracle-candidate
 experiment, not an end-to-end Stage 1 result. The release guide describes the
 additional mapping needed for actual backbone proposals.
 
-### Source Checks
-
-```bash
-PYTHONDONTWRITEBYTECODE=1 python tools/audit_release.py
-PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -p test_release_contracts.py
-```
-
-[Release Audit](docs/RELEASE_AUDIT.md) distinguishes corrected packaging issues,
-external requirements, and unresolved reproduction gaps. Publication commands
-are provided in [GitHub Release](GITHUB_RELEASE.md).
-
----
-
-Stage 1 extends the Multi3DRefer / M3DRef-CLIP implementation. Its original
-MIT copyright and license are retained in `LICENSE`. BlenderProc is an external
-dependency; its license is included alongside the synthetic construction code.
-See [Third-Party Notices](THIRD_PARTY_NOTICES.md). Preserve these notices when publishing.
 
 ## Bibtex
 ```
